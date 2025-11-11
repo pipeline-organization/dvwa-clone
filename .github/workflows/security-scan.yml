@@ -91,9 +91,8 @@ jobs:
             gitleaks detect \
               --source . \
               --report-format sarif \
-              --no-fail \
               --report-path gitleaks.sarif \
-              --verbose
+              --verbose || echo "⚠️ Gitleaks found leaks but continuing..."
 
         - name: Upload Gitleaks SARIF to GitHub Security Dashboard
           uses: github/codeql-action/upload-sarif@v3
