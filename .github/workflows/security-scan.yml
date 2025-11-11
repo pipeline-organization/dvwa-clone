@@ -70,23 +70,55 @@ jobs:
           name: trivy-sarif
           path: trivy.sarif
 
-  secret-gitleaks: 
-    name: gitleaks
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 100
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
-          GITLEAKS_VERSION: "8.24.3"
-          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "true"
-      - name: Upload Gitleaks SARIF to GitHub Security Dashboard
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: gitleaks-result.sarif
+  
+    secret-gitleaks: 
+      name: Secret Scan - Gitleaks 
+      runs-on: ubuntu-latest 
+      steps: 
+        - name: Checkout DVWA-Clone (full history)
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0  # commit geçmişini tara
+
+        - name: Install Gitleaks
+          run: |
+            wget https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz
+            tar -xvf gitleaks_8.24.3_linux_x64.tar.gz
+            sudo mv gitleaks /usr/local/bin/gitleaks
+
+        - name: Run Gitleaks (Full Repo Scan)
+          run: |
+            gitleaks detect \
+              --source . \
+              --report-format sarif \
+              --report-path gitleaks.sarif \
+              --verbose
+
+        - name: Upload Gitleaks SARIF to GitHub Security Dashboard
+          uses: github/codeql-action/upload-sarif@v3
+          with:
+            sarif_file: gitleaks.sarif
+
+
+
+
+  # secret-gitleaks: 
+  #   name: gitleaks
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 100
+  #     - uses: gitleaks/gitleaks-action@v2
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #         GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+  #         GITLEAKS_VERSION: "8.24.3"
+  #         GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "true"
+  #     - name: Upload Gitleaks SARIF to GitHub Security Dashboard
+  #       uses: github/codeql-action/upload-sarif@v3
+  #       with:
+  #         sarif_file: gitleaks-result.sarif
           
 
 
