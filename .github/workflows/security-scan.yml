@@ -87,7 +87,7 @@ jobs:
         continue-on-error: true
         with:
           path: ./
-          extra_args: --no-update --json > trufflehog.json
+          extra_args: --no-update --json
 
       - name: Scan Results Status
         if: steps.trufflehog.outcome == 'failure'
