@@ -70,23 +70,27 @@ jobs:
           name: trivy-sarif
           path: trivy.sarif
 
-  trufflehog:
-    name: Secret Scan - TruffleHog
+  TruffleHog:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     steps:
-      - name: Checkout code (full history)
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Run TruffleHog (Full Repo SARIF Scan)
+      - name: TruffleHog OSS
+        id: trufflehog
         uses: trufflesecurity/trufflehog@main
+        continue-on-error: true
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          format: sarif
-          output: trufflehog.sarif
+          path: ./
+          base: "${{ github.event.repository.default_branch }}"
+          head: HEAD
+          extra_args: --debug
 
-      - name: Upload TruffleHog SARIF to GitHub Security Dashboard
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: trufflehog.sarif
+      - name: Scan Results Status
+        if: steps.trufflehog.outcome == 'failure'
+        run: exit 1
