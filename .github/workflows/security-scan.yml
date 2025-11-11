@@ -49,13 +49,28 @@ jobs:
           format: sarif
           output: trivy.sarif
           vuln-type: 'os,library'
-          severity: 'HIGH,CRITICAL'
-          ignore-unfixed: true
+          # severity: 'HIGH,CRITICAL'
+          ignore-unfixed: false
 
       - name: Upload Trivy SARIF to GitHub Security Dashboard
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy.sarif
+
+      - name: Ensure SARIF file exists
+        run: |
+          if [ ! -f trivy.sarif ]; then
+            echo "Trivy SARIF file not found!"
+            exit 1
+          fi
+      
+      - name: Upload Trivy SARIF as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-sarif
+          path: trivy.sarif
+
+
 
   secret-gitleaks:
     name: Secret Scan - Gitleaks
