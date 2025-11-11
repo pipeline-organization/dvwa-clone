@@ -1,0 +1,77 @@
+name: Security Scan (DVWA-Clone) test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  security-events: write   # SARIF upload için gerekli
+  actions: read
+
+jobs:
+  sast-semgrep:
+    name: SAST - Semgrep
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout DVWA-Clone repo
+        uses: actions/checkout@v4
+
+      - name: Install Semgrep
+        run: pip install semgrep
+
+      - name: Run Semgrep (SAST)
+        run: |
+          semgrep --config auto --sarif --output semgrep.sarif
+          echo "✅ Semgrep completed"
+
+      - name: Upload Semgrep SARIF to GitHub Security Dashboard
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+
+  container-trivy:
+    name: Container Scan - Trivy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout DVWA-Clone repo
+        uses: actions/checkout@v4
+
+      - name: Build DVWA Docker image
+        run: docker build -t dvwa-clone:latest .
+
+      - name: Scan DVWA image with Trivy
+        uses: aquasecurity/trivy-action@v1
+        with:
+          image-ref: dvwa-clone:latest
+          format: sarif
+          output: trivy.sarif
+          vuln-type: 'os,library'
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: true
+
+      - name: Upload Trivy SARIF to GitHub Security Dashboard
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy.sarif
+
+  secret-gitleaks:
+    name: Secret Scan - Gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout DVWA-Clone (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # commit geçmişini de tara
+
+      - name: Run Gitleaks (Secrets Detection)
+        uses: zricethezav/gitleaks-action@v2
+        with:
+          args: '--report-format sarif --report-path gitleaks.sarif --verbose'
+
+      - name: Upload Gitleaks SARIF to GitHub Security Dashboard
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: gitleaks.sarif
