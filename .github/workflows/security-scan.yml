@@ -69,36 +69,27 @@ jobs:
         with:
           name: trivy-sarif
           path: trivy.sarif
-  secret-gitleaks:
-    name: Secret Scan - Gitleaks (Full Repository)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository (full history)
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Install Gitleaks
-        run: |
-          echo "🔧 Installing Gitleaks..."
-          curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64.tar.gz | \
-          tar -xz -C /usr/local/bin gitleaks
-
-      - name: Run Gitleaks full repo scan
-        run: |
-          echo "🚀 Running Gitleaks full scan on repo history and files..."
-          gitleaks detect \
-            --source . \
-            --report-path gitleaks.sarif \
-            --report-format sarif \
-            --verbose || true
-
-      - name: Upload Gitleaks SARIF to GitHub Security Dashboard
-        if: success() || failure()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: gitleaks.sarif
-
+  secret-gitleaks: 
+    name: Secret Scan - Gitleaks 
+    runs-on: ubuntu-latest 
+    steps: 
+      - name: Checkout DVWA-Clone (full history) 
+        uses: actions/checkout@v4 
+        with: 
+          fetch-depth: 0 # commit geçmişini de tara 
+      
+      - name: Run Gitleaks (Secrets Detection) 
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+        with: 
+          args: '--report-format sarif --report-path gitleaks.sarif --verbose' 
+      - name: Upload Gitleaks SARIF to GitHub Security Dashboard 
+        uses: github/codeql-action/upload-sarif@v3 
+        with: 
+          sarif_file: gitleaks-results.sarif
 
 
 
