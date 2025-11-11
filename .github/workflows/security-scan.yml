@@ -87,9 +87,7 @@ jobs:
         continue-on-error: true
         with:
           path: ./
-          base: "${{ github.event.repository.default_branch }}"
-          head: HEAD
-          extra_args: --debug
+          extra_args: --no-update --json > trufflehog.json
 
       - name: Scan Results Status
         if: steps.trufflehog.outcome == 'failure'
