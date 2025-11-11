@@ -70,25 +70,68 @@ jobs:
           name: trivy-sarif
           path: trivy.sarif
 
-  TruffleHog:
+  secret-gitleaks:
+    name: Secret Scan - Gitleaks
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout DVWA-Clone (full history)
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # tüm commit geçmişini tara
 
-      - name: TruffleHog OSS
-        id: trufflehog
-        uses: trufflesecurity/trufflehog@main
-        continue-on-error: true
+      - name: Install Gitleaks (latest CLI)
+        run: |
+          echo "⬇️ Installing Gitleaks..."
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64.tar.gz \
+            | tar xz
+          sudo mv gitleaks /usr/local/bin/
+
+      - name: Run Gitleaks (Secret Detection)
+        run: |
+          echo "🔍 Running Gitleaks scan..."
+          gitleaks detect --source . --report-format sarif --report-path gitleaks.sarif --verbose || true
+
+      - name: Check results
+        run: |
+          if [ -s gitleaks.sarif ]; then
+            echo "🚨 Potential secrets detected!"
+          else
+            echo "✅ No secrets found."
+          fi
+
+      - name: Upload Gitleaks SARIF to GitHub Security Dashboard
+        uses: github/codeql-action/upload-sarif@v3
         with:
-          path: ./
-          extra_args: --json
+          sarif_file: gitleaks.sarif
 
-      - name: Scan Results Status
-        if: steps.trufflehog.outcome == 'failure'
-        run: exit 1
+
+
+
+
+
+  # Disabled
+
+  # Secret Scanning with TruffleHog -  due to sarif issue
+  # https://github.com/trufflesecurity/trufflehog/issues/578
+  # TruffleHog:
+  #   runs-on: ubuntu-latest
+  #   defaults:
+  #     run:
+  #       shell: bash
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v3
+  #       with:
+  #         fetch-depth: 0
+
+  #     - name: TruffleHog OSS
+  #       id: trufflehog
+  #       uses: trufflesecurity/trufflehog@main
+  #       continue-on-error: true
+  #       with:
+  #         path: ./
+  #         extra_args: --json
+
+  #     - name: Scan Results Status
+  #       if: steps.trufflehog.outcome == 'failure'
+  #       run: exit 1
