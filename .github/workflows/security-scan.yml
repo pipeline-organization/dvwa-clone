@@ -82,6 +82,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
           GITLEAKS_VERSION: "8.24.3"
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "true"
+      - name: Upload Gitleaks SARIF to GitHub Security Dashboard
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: gitleaks-result.sarif
+          
 
 
 
