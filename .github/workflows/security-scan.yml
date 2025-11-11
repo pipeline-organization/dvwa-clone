@@ -70,25 +70,35 @@ jobs:
           name: trivy-sarif
           path: trivy.sarif
 
-  secret-gitleaks: 
-    name: Secret Scan - Gitleaks 
-    runs-on: ubuntu-latest 
-    steps: 
-      - name: Checkout DVWA-Clone (full history) 
-        uses: actions/checkout@v4 
-        with: 
-          fetch-depth: 0 # commit geçmişini de tara 
-      
-      - name: Run Gitleaks (Secrets Detection) 
+  secret-gitleaks:
+    name: Secret Scan - Gitleaks (Full Repo)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout DVWA-Clone (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # tüm commit geçmişini getir
+
+      - name: Run Gitleaks (Full Repository Scan)
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
-        with: 
-          args: '--report-format sarif --report-path gitleaks.sarif --verbose' 
-      - name: Upload Gitleaks SARIF to GitHub Security Dashboard 
-        uses: github/codeql-action/upload-sarif@v3 
-        with: 
+        with:
+          args: detect --source . --report-format sarif --report-path gitleaks.sarif --verbose
+
+      - name: Verify report exists
+        run: |
+          if [ ! -s gitleaks.sarif ]; then
+            echo "⚠️ Gitleaks SARIF report not found or empty!"
+            exit 1
+          else
+            echo "✅ Gitleaks scan complete. Report generated."
+          fi
+
+      - name: Upload Gitleaks SARIF to GitHub Security Dashboard
+        uses: github/codeql-action/upload-sarif@v3
+        with:
           sarif_file: gitleaks.sarif
 
 
