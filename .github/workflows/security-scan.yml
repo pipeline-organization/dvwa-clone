@@ -80,7 +80,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run TruffleHog (Full Repo SARIF Scan)
-        uses: trufflesecurity/trufflehog-actions-scan@v1
+        uses: trufflesecurity/trufflehog@main
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           format: sarif
