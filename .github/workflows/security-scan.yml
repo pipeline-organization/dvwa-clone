@@ -77,7 +77,7 @@ jobs:
       - name: Checkout DVWA-Clone (full history)
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # tüm commit geçmişini getir
+          fetch-depth: 100 # tüm commit geçmişini getir
 
       - name: Run Gitleaks (Full Repository Scan)
         uses: gitleaks/gitleaks-action@v2
