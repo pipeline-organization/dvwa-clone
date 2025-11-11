@@ -71,7 +71,7 @@ jobs:
           path: trivy.sarif
 
   
-    secret-gitleaks: 
+  secret-gitleaks: 
       name: Secret Scan - Gitleaks 
       runs-on: ubuntu-latest 
       steps: 
