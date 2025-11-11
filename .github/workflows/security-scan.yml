@@ -91,7 +91,7 @@ jobs:
             gitleaks detect \
               --source . \
               --report-format sarif \
-              -- no-fail \
+              --no-fail \
               --report-path gitleaks.sarif \
               --verbose
 
